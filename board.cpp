@@ -83,6 +83,14 @@ int board::doubleClick(int column, int row)
     {
         for (int j = -1; j < 2; ++j)
         {
+            if (column + i < 0)
+                continue;
+            if (column + i >= columns)
+                continue;
+            if (row + j < 0)
+                continue;
+            if (row + j >= rows)
+                continue;
             if (i == 0 && j == 0)
                 continue;
             if (getState(column + i, row + j) >= 0)

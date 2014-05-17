@@ -1,24 +1,18 @@
 TEMPLATE = app
-CONFIG += qt thread debug
-QT+= widgets
+CONFIG += console
+CONFIG -= app_bundle
+CONFIG -= qt
 
 SOURCES += \
     board.cpp \
     interface.cpp \
-    main.cpp \
-    gamestart.cpp \
-    main.cpp \
     video.cpp
 
 HEADERS += \
     board.h \
-    interface.h \
-    gamestart.h
+    interface.h
 
 LIBS += -lSDL2
 
 OTHER_FILES += \
     ProxySweep.pro.user
-
-FORMS += \
-    gamestart.ui

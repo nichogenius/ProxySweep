@@ -42,19 +42,10 @@ int drawTile(int row, int col, int state) {
         case UNVISITED:
             drawTexture(x, y, unpressed);
             break;
-        case UNVISITED_MINE:
-            drawTexture(x, y, unpressed);
-            break;
         case FLAG:
             drawTexture(x, y, flag);
             break;
         case QUESTION:
-            drawTexture(x, y, question);
-            break;
-        case FLAG_MINE:
-            drawTexture(x, y, flag);
-            break;
-        case QUESTION_MINE:
             drawTexture(x, y, question);
             break;
         case DETONATE:

@@ -22,6 +22,7 @@ GameStart::GameStart(QWidget *parent) :
     ui(new Ui::GameStart)
 {
     ui->setupUi(this);
+    initVideo();
 }
 
 GameStart::~GameStart()

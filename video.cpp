@@ -42,19 +42,10 @@ int drawTile(int row, int col, int state) {
         case UNVISITED:
             drawTexture(x, y, unpressed);
             break;
-        case UNVISITED_MINE:
-            drawTexture(x, y, unpressed);
-            break;
         case FLAG:
             drawTexture(x, y, flag);
             break;
         case QUESTION:
-            drawTexture(x, y, question);
-            break;
-        case FLAG_MINE:
-            drawTexture(x, y, flag);
-            break;
-        case QUESTION_MINE:
             drawTexture(x, y, question);
             break;
         case DETONATE:
@@ -146,12 +137,6 @@ void initVideo() {
         printf("%s\n", SDL_GetError());
         exit(1);
     }
-    ren = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-    SDL_PTR_ERR(__LINE__, win);
-    ren = NULL;
-    SDL_SetRenderDrawColor(ren, 255, 0, 0, 255);
-    SDL_PTR_ERR(__LINE__, ren);
-    initTextures();
 }
 
 void video_loop() {
@@ -160,6 +145,12 @@ void video_loop() {
     int sx = row_s * 32;
     int sy = col_s * 32;
     win = SDL_CreateWindow("ProxySweep", 100, 100, sx, sy, SDL_WINDOW_SHOWN);
+    SDL_PTR_ERR(__LINE__, win);
+    ren = NULL;
+    ren = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    SDL_PTR_ERR(__LINE__, ren);
+    SDL_SetRenderDrawColor(ren, 255, 0, 0, 255);
+    initTextures();
     SDL_Event e;
     int quit = 0;
     Uint32 ticks = 0;

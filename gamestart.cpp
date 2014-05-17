@@ -55,6 +55,6 @@ void GameStart::on_ExpertGame_clicked()
 
 void GameStart::on_StartCustomGame_clicked()
 {
-    int error = newGame(this->ui->ColumnSelector->value, this->ui->RowSelector->value);
+    int error = newGame(this->ui->ColumnSelector->value(), this->ui->RowSelector->value());
     parseError(error);
 }

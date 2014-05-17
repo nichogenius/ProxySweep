@@ -1,7 +1,6 @@
 TEMPLATE = app
-CONFIG += console
-CONFIG -= app_bundle
-CONFIG -= qt
+CONFIG += qt
+QT += widgets
 
 SOURCES += \
     board.cpp \
@@ -13,7 +12,8 @@ SOURCES += \
 HEADERS += \
     board.h \
     interface.h \
-    gamestart.h
+    gamestart.h \
+    video.h
 
 LIBS += -lSDL2
 

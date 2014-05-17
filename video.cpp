@@ -207,5 +207,4 @@ void video_loop() {
         }
     }
     SDL_DestroyWindow(win);
-    return 0;
 }

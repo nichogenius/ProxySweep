@@ -1,6 +1,7 @@
 #include "gamestart.h"
 #include "ui_gamestart.h"
 #include "interface.h"
+#include "video.h"
 #include <QMessageBox>
 
 void GameStart::parseError(int err) {
@@ -10,8 +11,8 @@ void GameStart::parseError(int err) {
         messageBox.setFixedSize(500,200);
     }
     else {
-        this>hide();
-        run_game();
+        this->hide();
+        video_loop();
         this->show();
     }
 }
@@ -55,6 +56,6 @@ void GameStart::on_ExpertGame_clicked()
 
 void GameStart::on_StartCustomGame_clicked()
 {
-    int error = newGame(this->ui->ColumnSelector->value(), this->ui->RowSelector->value());
+    int error = newGame(this->ui->ColumnSelector->value(), this->ui->RowSelector->value(), this->ui->MineSelector->value());
     parseError(error);
 }

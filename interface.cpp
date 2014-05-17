@@ -1,5 +1,7 @@
 #include "interface.h"
 #include "board.h"
+#include <string>;
+using namespace std;
 board* GAME;
 
 const int EASY_GAME_COLUMNS = 15;
@@ -19,6 +21,40 @@ const int EXPERT_GAME_ROWS = 80;
 const int EXPERT_GAME_MINES = EXPERT_GAME_COLUMNS * EXPERT_GAME_ROWS * .5;
 
 const float MAX_MINE_RATIO = .75;
+
+bool restartGame()
+{
+    return true;
+}
+
+char* getError(int code)
+{
+    char* error;
+    switch (code)
+    {
+        case TOO_FEW_MINES_ERROR:
+            error = "The number of mines entered was too low.";
+            return error;
+        case TOO_MANY_MINES_ERROR:
+            error = "The number of mines entered was too high.";
+            return error;
+        case TOO_FEW_ROWS_ERROR:
+            error = "The number of rows entered was too low.";
+            return error;
+        case TOO_MANY_ROWS_ERROR:
+            error = "The number of rows entered was too high.";
+            return error;
+        case TOO_FEW_COLUMNS_ERROR:
+            error = "The number of columns entered was too low.";
+            return error;
+        case TOO_MANY_COLUMNS_ERROR:
+            error = "The number of columns entered was too high.";
+            return error;
+        default:
+            error = "Bad Error Code.";
+            return error;
+    }
+}
 
 int buttonPressed(int column, int row, int state)
 {
@@ -84,4 +120,9 @@ int newExpertGame()
 int** getPointer()
 {
     return GAME->getArrayPointer();
+}
+
+void endGame()
+{
+    GAME->~board();
 }

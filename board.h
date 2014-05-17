@@ -4,6 +4,7 @@
 class board{
 private:
     bool first_click;
+    bool inBounds(int row, int column);
     int columns;
     int flags;
     int mines;

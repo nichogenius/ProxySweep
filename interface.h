@@ -27,6 +27,10 @@
 #define TOO_MANY_ROWS_ERROR 5
 #define TOO_MANY_COLUMNS_ERROR 6
 
+bool restartGame();
+
+char* getError(int code);
+
 int buttonPressed(int column, int row, int state);
 int doubleClick(int column, int row);
 int newGame(int columns, int rows, int mines);
@@ -36,6 +40,9 @@ int newHardGame();
 int newExpertGame();
 int getColumns();
 int getRows();
+
 int** getPointer();
+
+void endGame();
 
 #endif // INTERFACE_H

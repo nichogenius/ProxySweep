@@ -19,6 +19,19 @@ board::board(int columns_in, int rows_in, int mines_in)
     }
 }
 
+bool board::inBounds(int column, int row)
+{
+    if (column < 0)
+        return false;
+    if (column >= columns)
+        return false;
+    if (row < 0)
+        return false;
+    if (row >= rows)
+        return false;
+    return true;
+}
+
 int board::begin_play(int column, int row)  //allows an end_game check after each play.
 {
     int temp = play(column, row);
@@ -55,13 +68,7 @@ int board::countMines(int column, int row)
         {
             if (i == 0 && j == 0) //If it's the same as the current cell
                 continue;
-            if (column + i < 0)
-                continue;
-            if (column + i >= columns)
-                continue;
-            if (row + j < 0)
-                continue;
-            if (row + j >= rows)
+            if (!inBounds(column + i, row + j))
                 continue;
             if (getState(column + i, row + j) == UNVISITED_MINE)
                 ++adjacent_mines;
@@ -83,13 +90,7 @@ int board::doubleClick(int column, int row)
     {
         for (int j = -1; j < 2; ++j)
         {
-            if (column + i < 0)
-                continue;
-            if (column + i >= columns)
-                continue;
-            if (row + j < 0)
-                continue;
-            if (row + j >= rows)
+            if (!inBounds(column + i, row + j))
                 continue;
             if (i == 0 && j == 0)
                 continue;
@@ -201,13 +202,7 @@ int board::play(int column, int row)
             {
                 if (i == 0 && j == 0)
                     continue;
-                if (column + i < 0)
-                    continue;
-                if (column + i >= columns)
-                    continue;
-                if (row + j < 0)
-                    continue;
-                if (row + j >= rows)
+                if (!inBounds(column + i, row + j))
                     continue;
                 if (getState(column + i, row + j) == FLAG)
                     continue;

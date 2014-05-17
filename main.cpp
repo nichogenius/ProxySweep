@@ -146,7 +146,7 @@ int main(int argc, char** argv) {
         printf("%s\n", SDL_GetError());
         return 1;
     }
-    if(newGame(25, 35, 75) != GAME_CREATED) {
+    if(newGame(25, 35, 150) != GAME_CREATED) {
         //Get error code
         printf("Error creating game: \n");
         exit(1);

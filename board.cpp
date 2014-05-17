@@ -167,11 +167,11 @@ int board::play(int column, int row)
         {
             rand_row = rand() % rows;
             rand_column = rand() % columns;
-            if (mineHash(column, row) == mineHash(rand_column, rand_row)) //prevents hitting mine on first click
+            if (column == rand_column && row == rand_row) //prevents hitting mine on first click
                 continue;
             if (inMines(rand_column, rand_row)) //prevents duplicate mines
                 continue;
-            mine_list.push_back(mineHash(column, row)); //add mines to list
+            mine_list.push_back(mineHash(rand_column, rand_row)); //add mines to list
             ++mine_count;
         }
         first_click = false;

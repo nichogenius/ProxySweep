@@ -2,6 +2,8 @@
 #include "interface.h"
 #include <stdlib.h>
 #include <time.h>
+#include <vector>
+using namespace std;
 
 board::board(int columns_in, int rows_in, int mines_in)
 {
@@ -32,6 +34,16 @@ bool board::inBounds(int column, int row)
     return true;
 }
 
+bool board::inMines(int column, int row)
+{
+    for (int i = 0; i < mine_list.size(); ++i)
+    {
+        if (mineHash(column, row) == mine_list[i])
+            return true;
+    }
+    return false;
+}
+
 int board::begin_play(int column, int row)  //allows an end_game check after each play.
 {
     int temp = play(column, row);
@@ -46,9 +58,9 @@ int board::begin_play(int column, int row)  //allows an end_game check after eac
                 return temp;
             else if (getState(i, j) == UNVISITED)
                 return temp;
-            else if (getState(i, j) == FLAG_MINE)
+            else if (inMines(i, j) && getState(i, j) == FLAG)
                 ++correct_flags;
-            else if (getState(i, j) == UNVISITED_MINE)
+            else if (inMines(i, j) && getState(i, j) == UNVISITED)
                 ++unvisited_mines;
         }
     if (unvisited_mines + correct_flags == mines)
@@ -57,6 +69,11 @@ int board::begin_play(int column, int row)  //allows an end_game check after eac
         return GAME_END_SUCCESS;
     }
     return temp;
+}
+
+int board::mineHash(int column, int row)
+{
+    return (column * columns) + row;
 }
 
 int board::countMines(int column, int row)
@@ -70,11 +87,7 @@ int board::countMines(int column, int row)
                 continue;
             if (!inBounds(column + i, row + j))
                 continue;
-            if (getState(column + i, row + j) == UNVISITED_MINE)
-                ++adjacent_mines;
-            else if (getState(column + i, row + j) == FLAG_MINE)
-                ++adjacent_mines;
-            else if (getState(column + i, row + j) == QUESTION_MINE)
+            if (inMines(column + i, row + j))
                 ++adjacent_mines;
         }
     }
@@ -96,7 +109,7 @@ int board::doubleClick(int column, int row)
                 continue;
             if (getState(column + i, row + j) >= 0)
                 continue;
-            else if (getState(column + i, row + j) != FLAG && getState(column + i, row + j) != FLAG_MINE)
+            else if (getState(column + i, row + j) == UNVISITED)
             {
                 game_state = begin_play(column + i, row + j);
                 if (game_state == GAME_END_SUCCESS || game_state == GAME_END_FAIL)
@@ -121,29 +134,18 @@ int board::mark(int column, int row)
     }
     else if (getState(column, row) == QUESTION)
         setState(column, row, UNVISITED);
-    else if (getState(column, row) == UNVISITED_MINE)
-    {
-        setState(column, row, FLAG_MINE);
-        ++flags;
-    }
-    else if (getState(column, row) == FLAG_MINE)
-    {
-        setState(column, row, QUESTION_MINE);
-        --flags;
-    }
-    else if (getState(column, row) == QUESTION_MINE)
-        setState(column, row, UNVISITED_MINE);
+
     if (flags == mines)
     {
         for (int i = 0; i < columns; ++i)
         {
             for (int j = 0; j < rows; ++j)
             {
-                if (getState(i, j) == UNVISITED_MINE)
+                if (getState(i, j) == UNVISITED && inMines(i, j))
                     return ONGOING;
-                if (getState(i, j) == FLAG)
+                if (getState(i, j) == FLAG && !inMines(i, j))
                     return ONGOING;
-                if (getState(i, j) == QUESTION_MINE)
+                if (getState(i, j) == QUESTION && inMines(i, j))
                     return ONGOING;
             }
         }
@@ -157,7 +159,6 @@ int board::play(int column, int row)
     int game_state;
     if (first_click)
     {
-        setState(column, row, QUESTION); //First tile is always safe... set it to QUESTION so it isn't selected for a mine.
         int rand_row;
         int rand_column;
         int mine_count = 0;
@@ -166,29 +167,29 @@ int board::play(int column, int row)
         {
             rand_row = rand() % rows;
             rand_column = rand() % columns;
-            if (getState(rand_column, rand_row) == UNVISITED)
-            {
-                setState(rand_column, rand_row, UNVISITED_MINE);
-                ++mine_count;
-            }
+            if (mineHash(column, row) == mineHash(rand_column, rand_row)) //prevents hitting mine on first click
+                continue;
+            if (inMines(rand_column, rand_row)) //prevents duplicate mines
+                continue;
+            mine_list.push_back(mineHash(column, row)); //add mines to list
+            ++mine_count;
         }
-        setState(column, row, UNVISITED); //Probably not necessary
         first_click = false;
     }
 
     if (getState(column, row) >= 0)
         return ONGOING;
-    if (getState(column, row) == UNVISITED_MINE)
+    if (getState(column, row) == UNVISITED && inMines(column, row))
     {
         detonate(column, row);
         return GAME_END_FAIL;
     }
-    if (getState(column, row) == FLAG_MINE)
+    if (getState(column, row) == FLAG && inMines(column, row))
     {
         detonate(column, row);
         return GAME_END_FAIL;
     }
-    if (getState(column, row) == QUESTION_MINE)
+    if (getState(column, row) == QUESTION && inMines(column, row))
     {
         detonate(column, row);
         return GAME_END_FAIL;
@@ -206,11 +207,7 @@ int board::play(int column, int row)
                     continue;
                 if (getState(column + i, row + j) == FLAG)
                     continue;
-                if (getState(column + i, row + j) == FLAG_MINE)
-                    continue;
                 if (getState(column + i, row + j) == QUESTION)
-                    continue;
-                if (getState(column + i, row + j) == QUESTION_MINE)
                     continue;
                 game_state = play(column + i, row + j);
                 if (game_state == GAME_END_SUCCESS)
@@ -228,8 +225,8 @@ void board::autoFlag()
     for (int i = 0; i < columns; ++i)
         for (int j = 0; j < rows; ++j)
         {
-            if(getState(i, j) == UNVISITED_MINE)
-                setState(i, j, FLAG_MINE);
+            if(getState(i, j) == UNVISITED && inMines(i, j))
+                setState(i, j, FLAG);
         }
 }
 
@@ -242,17 +239,13 @@ void board::detonate(int column, int row)
         {
             if (getState(i, j) >= 0)
                 continue;
-            else if (getState(i, j) == FLAG_MINE)
-                continue;
-            else if (getState(i, j) == UNVISITED)
-                continue;
-            else if (getState(i, j) == UNVISITED_MINE)
-                setState(i, j, MINE);
-            else if (getState(i, j) == QUESTION_MINE)
-                setState(i, j, MINE);
-            else if (getState(i, j) == FLAG)
+            else if (getState(i, j) == FLAG && !inMines(i, j))
                 setState(i, j, BAD_FLAG);
-            else if (getState(i, j) == QUESTION)
+            else if (getState(i, j) == UNVISITED && inMines(i, j))
+                setState(i, j, MINE);
+            else if (getState(i, j) == QUESTION && inMines(i, j))
+                setState(i, j, MINE);
+            else if (getState(i, j) == QUESTION && !inMines(i, j))
                 setState(i, j, BAD_QUESTION);
         }
     }

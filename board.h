@@ -1,17 +1,23 @@
 #ifndef BOARD_H
 #define BOARD_H
+#include <vector>
+using namespace std;
 
 class board{
 private:
     bool first_click;
-    bool inBounds(int row, int column);
     int columns;
     int flags;
     int mines;
-    int play(int, int);
     int rows;
+    vector <int> mine_list;
+
+    bool inBounds(int row, int column);
+    bool inMines(int column, int row);
+    int play(int, int);
     int countMines(int, int);
     int getState(int column, int row){return game_board[column][row];}
+    int mineHash(int, int);
     void autoFlag();
     void detonate(int, int);
     void setState(int, int, int);

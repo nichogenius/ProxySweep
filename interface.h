@@ -5,15 +5,12 @@
 #define RIGHT 1
 
 #define UNVISITED -1
-#define UNVISITED_MINE -2
-#define FLAG -3
-#define QUESTION -4
-#define FLAG_MINE -5
-#define QUESTION_MINE -6
-#define DETONATE -7
-#define MINE -8
-#define BAD_FLAG -9
-#define BAD_QUESTION -10
+#define FLAG -2
+#define QUESTION -3
+#define DETONATE -4
+#define MINE -5
+#define BAD_FLAG -6
+#define BAD_QUESTION -7
 
 #define GAME_END_SUCCESS 0
 #define GAME_END_FAIL 1

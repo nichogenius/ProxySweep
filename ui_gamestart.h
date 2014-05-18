@@ -88,7 +88,7 @@ public:
 
     void retranslateUi(QDialog *GameStart)
     {
-        GameStart->setWindowTitle(QApplication::translate("GameStart", "Dialog", 0));
+        GameStart->setWindowTitle(QApplication::translate("GameStart", "ProxySweep", 0));
         EasyGame->setText(QApplication::translate("GameStart", "Easy Game", 0));
         ModerateGame->setText(QApplication::translate("GameStart", "Moderate Game", 0));
         HardGame->setText(QApplication::translate("GameStart", "Hard Game", 0));

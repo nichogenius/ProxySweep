@@ -1,6 +1,6 @@
 #ifndef VIDEO_H
 #define VIDEO_H
 void initVideo();
-void video_loop();
+void gameLoop();
 
 #endif // VIDEO_H

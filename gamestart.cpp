@@ -12,7 +12,8 @@ void GameStart::parseError(int err) {
     }
     else {
         this->hide();
-        video_loop();
+        gameLoop();
+        endGame();
         this->show();
     }
 }

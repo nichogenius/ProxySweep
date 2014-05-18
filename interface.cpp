@@ -1,6 +1,7 @@
 #include "interface.h"
 #include "board.h"
 #include <string>;
+#include <iostream>
 using namespace std;
 board* GAME;
 
@@ -58,6 +59,7 @@ char* getError(int code)
 
 int buttonPressed(int column, int row, int state)
 {
+    cout << column << ' ' << row << endl;
     if (state == LEFT)
         return GAME->begin_play(column, row);
     else if (state == RIGHT)

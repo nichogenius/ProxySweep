@@ -184,16 +184,6 @@ int board::play(int column, int row)
         detonate(column, row);
         return GAME_END_FAIL;
     }
-    if (getState(column, row) == FLAG && inMines(column, row))
-    {
-        detonate(column, row);
-        return GAME_END_FAIL;
-    }
-    if (getState(column, row) == QUESTION && inMines(column, row))
-    {
-        detonate(column, row);
-        return GAME_END_FAIL;
-    }
     setState(column, row, countMines(column, row));
     if (getState(column, row) == 0)
     {

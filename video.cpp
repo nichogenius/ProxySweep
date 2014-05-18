@@ -15,15 +15,54 @@ SDL_Renderer*  ren;
 
 #define CLICK_DELAY 250
 #define SDL_PTR_ERR(line, name) if (name == NULL) {printf("Line %u: %s: %s\n", line, #name, SDL_GetError()); exit(1);}
+#define HISTORY_DEPTH 3
+#define NEW_STATE -1
+#define ANIMATION_START 32000
+#define ANIMATION_STEPS 20
 
+typedef struct buffer_node_t {
+    int hist[HISTORY_DEPTH];
+} buffer_node;
+
+buffer_node** render_buffer;
+int** render_state;
 int** board;
 int col_s;
 int row_s;
+
+
+
+void freeRenderBuffer() {
+    for (int i = 0; i < col_s; i++) {
+        free(render_buffer[i]);
+        free(render_state[i]);
+    }
+    free(render_buffer);
+    free(render_state);
+}
+
+
+void initRenderBuffer() {
+    render_buffer = (buffer_node**)malloc(sizeof(buffer_node) * col_s);
+    render_state = (int**)malloc(sizeof(int) * col_s);
+    for (int i = 0; i < col_s; i++) {
+        render_buffer[i] = (buffer_node*)malloc(sizeof(buffer_node) * row_s);
+        render_state[i] = (int*)malloc(sizeof(int) * row_s);
+        for (int j = 0; j < row_s; j++) {
+            for (int k = 0; k < HISTORY_DEPTH; k++) {
+                render_buffer[i][j].hist[k] = 0;
+            }
+            render_state[i][j] = 0;
+        }
+    }
+}
 
 void showMessage(char * msg, char * title)
 {
     SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, title, msg, win);
 }
+
+
 
 void drawTexture(int x, int y, SDL_Texture* tex) {
     SDL_Rect pos;
@@ -34,43 +73,75 @@ void drawTexture(int x, int y, SDL_Texture* tex) {
     SDL_RenderCopy(ren, tex, NULL, &pos);
 }
 
-int drawTile(int row, int col, int state) {
-    int x = row * 32;
-    int y = col * 32;
-    //printf("Render\n");
-    switch (state) {
+void drawTextureWithRotateSizeAlpha(int x, int y, SDL_Texture* tex, double degrees, int size) {
+    SDL_Rect pos;
+    pos.x = x;
+    pos.y = y;
+    pos.w = 32;
+    pos.h = 32;
+    SDL_RenderCopyEx(ren, tex, NULL, &pos, degrees, NULL, SDL_FLIP_NONE);
+}
+
+SDL_Texture* mapStateToTexture(int state) {
+ switch (state) {
         case UNVISITED:
-            drawTexture(x, y, unpressed);
-            break;
+            return unpressed;
         case FLAG:
-            drawTexture(x, y, flag);
-            break;
+            return flag;
         case QUESTION:
-            drawTexture(x, y, question);
-            break;
+            return question;
         case DETONATE:
-            //drawTexture(x, y, mine);_
-            break;
+            return mine;
         case MINE:
-            drawTexture(x, y, mine);
-            break;
+            return mine;
         case BAD_FLAG:
-            drawTexture(x, y, flag_wrong);
-            break;
+            return flag_wrong;
         case BAD_QUESTION:
-            drawTexture(x, y, question_wrong);
-            break;
+            return question_wrong;
         case 0:
-            drawTexture(x, y, pressed);
-            break;
+            return pressed;
         default:
             if (state <= 8)
-                drawTexture(x, y, numbers[state-1]);
+                return numbers[state-1];
             else {
                 printf("Invalid tile state.\n");
                 exit(1);
             }
     }
+}
+
+void drawAnimation(int row, int col, int state) {
+    int x = col * 32;
+    int y = row * 32;
+    int* r_state = &(render_state[col][row]);
+    if (r_state != 0) {
+        *r_state--;
+        if (*r_state < ANIMATION_START - ANIMATION_STEPS)
+            *r_state = 0;
+    }
+    if (*r_state == 0 || *r_state > ANIMATION_START) {
+        drawTexture(x, y, mapStateToTexture(state));
+    }
+    else {
+        drawTexture(x, y, mapStateToTexture(render_buffer[col][row].hist[1]));
+        int step = (ANIMATION_START - *r_state) * -1;
+        drawTextureWithRotateSizeAlpha(x, y, mapStateToTexture(state), 80 - (step * 4), 100);
+    }
+}
+
+void updateRenderBuffer(int row, int col, int state) {
+    if (render_buffer[col][row].hist[0] != state) {
+        for (int i = HISTORY_DEPTH-1; i > 0; i--) {
+            render_buffer[col][row].hist[i] = render_buffer[col][row].hist[i-1];
+        } 
+        render_buffer[col][row].hist[0] = state;
+        render_state[col][row] = NEW_STATE;
+    }
+}
+
+int drawTile(int row, int col, int state) {
+    updateRenderBuffer(row, col, state);
+    drawAnimation(row,col,state);
 }
 
 void renderBoard() {
@@ -139,12 +210,13 @@ void initVideo() {
     }
 }
 
-void video_loop() {
+void gameLoop() {
     col_s = getColumns();
     row_s = getRows();
-    int sx = row_s * 32;
-    int sy = col_s * 32;
-    win = SDL_CreateWindow("ProxySweep", 100, 100, sx, sy, SDL_WINDOW_SHOWN);
+    initRenderBuffer();
+    int sx = col_s * 32;
+    int sy = row_s * 32;
+    win = SDL_CreateWindow("ProxySweep", 100, 100, sx, sy, SDL_WINDOW_SHOWN|SDL_WINDOW_INPUT_FOCUS|SDL_WINDOW_MOUSE_FOCUS);
     SDL_PTR_ERR(__LINE__, win);
     ren = NULL;
     ren = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
@@ -163,8 +235,8 @@ void video_loop() {
             if (e.type == SDL_MOUSEBUTTONDOWN) {
                 int x, y;
                 Uint32 s = SDL_GetMouseState(&x, &y);
-                int col = y/32;
-                int row = x/32;
+                int col = x/32;
+                int row = y/32;
                 if (s & SDL_BUTTON(1)) {
                     if (SDL_GetTicks() - ticks < CLICK_DELAY)
                         game_state = doubleClick(col, row);
@@ -197,5 +269,7 @@ void video_loop() {
                 break;
         }
     }
+    while (SDL_PollEvent(&e));
+    freeRenderBuffer();
     SDL_DestroyWindow(win);
 }

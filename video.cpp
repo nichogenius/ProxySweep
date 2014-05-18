@@ -18,7 +18,7 @@ SDL_Renderer*  ren;
 #define HISTORY_DEPTH 3
 #define NEW_STATE -1
 #define ANIMATION_START 32000
-#define ANIMATION_STEPS 20
+#define ANIMATION_STEPS 10
 
 typedef struct buffer_node_t {
     int hist[HISTORY_DEPTH];
@@ -43,8 +43,8 @@ void freeRenderBuffer() {
 
 
 void initRenderBuffer() {
-    render_buffer = (buffer_node**)malloc(sizeof(buffer_node) * col_s);
-    render_state = (int**)malloc(sizeof(int) * col_s);
+    render_buffer = (buffer_node**)malloc(sizeof(buffer_node*) * col_s);
+    render_state = (int**)malloc(sizeof(int*) * col_s);
     for (int i = 0; i < col_s; i++) {
         render_buffer[i] = (buffer_node*)malloc(sizeof(buffer_node) * row_s);
         render_state[i] = (int*)malloc(sizeof(int) * row_s);
@@ -75,10 +75,11 @@ void drawTexture(int x, int y, SDL_Texture* tex) {
 
 void drawTextureWithRotateSizeAlpha(int x, int y, SDL_Texture* tex, double degrees, int size) {
     SDL_Rect pos;
-    pos.x = x;
-    pos.y = y;
-    pos.w = 32;
-    pos.h = 32;
+    float s = size/100.0;
+    pos.x = x + (16 - 16 * s);
+    pos.y = y + (16 - 16 * s);
+    pos.w = 32 * s;
+    pos.h = 32 * s;
     SDL_RenderCopyEx(ren, tex, NULL, &pos, degrees, NULL, SDL_FLIP_NONE);
 }
 
@@ -114,18 +115,25 @@ void drawAnimation(int row, int col, int state) {
     int x = col * 32;
     int y = row * 32;
     int* r_state = &(render_state[col][row]);
-    if (r_state != 0) {
-        *r_state--;
+    if (*r_state == NEW_STATE) {
+        *r_state = ANIMATION_START + 10;
+    }
+    if (*r_state != 0) {
+        (*r_state)--;
         if (*r_state < ANIMATION_START - ANIMATION_STEPS)
             *r_state = 0;
     }
-    if (*r_state == 0 || *r_state > ANIMATION_START) {
+    if (*r_state == 0) {
         drawTexture(x, y, mapStateToTexture(state));
+    }
+    else if (*r_state > ANIMATION_START) {
+        drawTexture(x, y, mapStateToTexture(render_buffer[col][row].hist[1]));
     }
     else {
         drawTexture(x, y, mapStateToTexture(render_buffer[col][row].hist[1]));
-        int step = (ANIMATION_START - *r_state) * -1;
-        drawTextureWithRotateSizeAlpha(x, y, mapStateToTexture(state), 80 - (step * 4), 100);
+        int step = ((ANIMATION_START - *r_state));
+        double deg = 90 - step * 9;
+        drawTextureWithRotateSizeAlpha(x, y, mapStateToTexture(state), deg, step * 10);
     }
 }
 
@@ -133,7 +141,7 @@ void updateRenderBuffer(int row, int col, int state) {
     if (render_buffer[col][row].hist[0] != state) {
         for (int i = HISTORY_DEPTH-1; i > 0; i--) {
             render_buffer[col][row].hist[i] = render_buffer[col][row].hist[i-1];
-        } 
+        }
         render_buffer[col][row].hist[0] = state;
         render_state[col][row] = NEW_STATE;
     }
@@ -169,6 +177,8 @@ void initTextures() {
     s = SDL_LoadBMP("textures/base_pressed.bmp");
     SDL_PTR_ERR(__LINE__, s);
     pressed = SDL_CreateTextureFromSurface(ren, s);
+    SDL_SetTextureAlphaMod(pressed, 127);
+    SDL_SetTextureBlendMode(pressed, SDL_BLENDMODE_BLEND);
     SDL_PTR_ERR(__LINE__, pressed);
     SDL_FreeSurface(s);
     s = SDL_LoadBMP("textures/flag.bmp");
@@ -216,12 +226,12 @@ void gameLoop() {
     initRenderBuffer();
     int sx = col_s * 32;
     int sy = row_s * 32;
-    win = SDL_CreateWindow("ProxySweep", 100, 100, sx, sy, SDL_WINDOW_SHOWN|SDL_WINDOW_INPUT_FOCUS|SDL_WINDOW_MOUSE_FOCUS);
+    win = SDL_CreateWindow("ProxySweep", 100, 100, sx, sy, SDL_WINDOW_SHOWN);
     SDL_PTR_ERR(__LINE__, win);
     ren = NULL;
     ren = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     SDL_PTR_ERR(__LINE__, ren);
-    SDL_SetRenderDrawColor(ren, 255, 0, 0, 255);
+    SDL_SetRenderDrawColor(ren, 0, 127, 127, 255);
     initTextures();
     SDL_Event e;
     int quit = 0;
